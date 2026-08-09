@@ -1,0 +1,298 @@
+﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>青岛金洲热力 · 小区管家电话查询</title>
+    <style>
+        :root {
+            --primary: #C9402A;
+            --bg: #f5f5f5;
+            --card: #fff;
+            --text: #1a1a1a;
+            --text-secondary: #6B7280;
+            --shadow: 0 2px 16px rgba(0,0,0,0.07);
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #f0f2f5; color: var(--text); min-height: 100vh;
+            display: flex; align-items: center; justify-content: center; padding: 20px;
+        }
+        .main-card {
+            background: var(--card); border-radius: 20px; padding: 32px 28px;
+            width: 100%; max-width: 440px; box-shadow: 0 8px 32px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .header { text-align: center; margin-bottom: 28px; }
+        .header .logo-img {
+            width: 70px;
+            height: 70px;
+            margin-bottom: 12px;
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .header h1 { font-size: 20px; font-weight: 700; margin-top: 8px; }
+        .header .subtitle { font-size: 13px; color: var(--text-secondary); margin-top: 4px; }
+
+        /* 搜索区域 */
+        .search-area { margin-bottom: 20px; position: relative; }
+        .search-area label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 6px; }
+        .search-input {
+            width: 100%; padding: 13px 16px; border-radius: 12px; border: 2px solid #e0e0e0;
+            font-size: 15px; background: #fafafa; transition: 0.2s; font-family: inherit;
+        }
+        .search-input:focus {
+            outline: none; border-color: var(--primary); background: #fff;
+            box-shadow: 0 0 0 4px rgba(201,64,42,0.08);
+        }
+        .suggestions {
+            position: absolute; top: 100%; left: 0; right: 0; background: #fff;
+            border: 1px solid #ddd; border-top: none; border-radius: 0 0 12px 12px;
+            max-height: 220px; overflow-y: auto; z-index: 10; display: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .suggestions.show { display: block; }
+        .suggestion-item {
+            padding: 12px 16px; cursor: pointer; font-size: 14px;
+            border-bottom: 1px solid #f5f5f5; transition: background 0.15s;
+        }
+        .suggestion-item:hover, .suggestion-item.active { background: #FFF0ED; }
+        .suggestion-item:last-child { border-bottom: none; }
+
+        /* 结果卡片 */
+        .result-card {
+            background: #FFFBF5; border: 2px solid #FDE68A; border-radius: 14px;
+            padding: 20px 22px; display: none; animation: fadeIn 0.3s ease;
+        }
+        .result-card.show { display: block; }
+        @keyframes fadeIn { from { opacity:0; transform: translateY(12px); } to { opacity:1; transform: translateY(0); } }
+        .result-card .station-name {
+            font-size: 17px; font-weight: 700; color: #C9402A;
+            display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+        }
+        .result-card .station-name .dot { width:8px; height:8px; background:#C9402A; border-radius:50%; }
+        .result-card .community-name { font-size: 13px; color: #6B7280; margin-bottom: 16px; }
+        .result-card .phone-display {
+            display: flex; align-items: center; gap: 12px;
+            padding: 14px 0; border-top: 1px solid #FDE68A;
+        }
+        .result-card .phone-display .phone-icon {
+            width: 44px; height: 44px; border-radius: 50%; background: #FEF2F2;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .result-card .phone-display .phone-number {
+            font-size: 22px; font-weight: 700; color: #1a1a1a; letter-spacing: 1px;
+        }
+        .result-card .phone-link {
+            display: block; margin-top: 14px; background: #C9402A; color: #fff;
+            padding: 12px 24px; border-radius: 24px; text-decoration: none; font-weight: 600;
+            font-size: 15px; text-align: center; transition: 0.2s;
+        }
+        .result-card .phone-link:hover { background: #A8321F; box-shadow: 0 4px 14px rgba(201,64,42,0.35); }
+
+        .empty-hint { text-align: center; padding: 30px 10px; color: #bbb; font-size: 14px; }
+        .empty-hint .big-icon { font-size: 48px; display: block; margin-bottom: 10px; }
+        .footer-note { text-align: center; margin-top: 20px; font-size: 11px; color: #bbb; }
+
+        @media (max-width: 480px) {
+            .main-card { padding: 24px 18px; }
+            .result-card .phone-number { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-card">
+        <div class="header">
+            <!-- 🔥  -->
+             青岛能源          <h1>青岛金洲热力</h1>
+            <p class="subtitle">小区供热管家电话 · 一键查询</p>
+        </div>
+
+        <div class="search-area">
+            <label for="searchInput">📍 输入小区名称</label>
+            <input type="text" id="searchInput" class="search-input" 
+                   placeholder="例如：嘉兴苑、向阳小区..." 
+                   autocomplete="off"
+                   oninput="handleInput()"
+                   onfocus="handleInput()"
+                   onblur="hideSuggestionsDelay()">
+            <div id="suggestions" class="suggestions"></div>
+        </div>
+
+        <div class="result-card" id="resultCard">
+            <div class="station-name">
+                <span class="dot"></span>
+                <span id="resultStation"></span>
+            </div>
+            <div class="community-name" id="resultCommunity"></div>
+            <div class="phone-display">
+                <div class="phone-icon">📞</div>
+                <div class="phone-number" id="resultPhone"></div>
+            </div>
+            <a class="phone-link" id="resultPhoneLink" href="javascript:void(0);">
+                📞 一键拨打
+            </a>
+        </div>
+
+        <div class="empty-hint" id="emptyHint">
+            <span class="big-icon">🔍</span>
+            输入小区名称，自动匹配供热管家电话
+        </div>
+
+        <div class="footer-note">青岛能源 · 奋斗美好生活</div>
+    </div>
+
+    <script>
+        // 换热站及小区数据
+        const stationData = [
+           { name: '向阳换热站', phone: '0532-8720-3007', communities: ['向阳小区', '向阳家园', '建人行宿舍', '湖州路市府宿舍',  '碳黑厂宿舍', '阜安茗苑', '胶州东路137号（臻世家小区）', '白水泉商住小区','白水泉小区','新嘉园','盛天国际','裕华园小区','胶州湾花园','环卫处宿舍','茶庵花园','向阳小区','九州金属公司宿舍','巨丰小区','新向阳商业广场','物资局宿舍','站东小区','老站东小区'] },
+            { name: '邮电新村换热站', phone: '0532-8728-0063', communities: ['邮电新村', '大同新村', '芙蓉小镇', '新源首尔小镇', '龙苑花园小区', '大同新区', '兰东小区', '兰东金山', '云华小区', '大同小区', 'PS小区','富民小区7#-12#', '宏达技术学校', '一站散户（李哥庄镇政府）', '阳光丽景小区', '同福苑小区',  '阜东小区', '阜安办事处宿舍', ' 福州南路公路段宿舍', '特耐宿舍', '富民小区1#-4#', '大同村民楼', '华星花园', '中央公园南区C27-30#、别墅区' ] },
+            { name: '吉祥苑换热站', phone: '0532-8721-2603', communities: ['吉祥苑', '康居园', '农林街小区农行', '怡秀家园小区', '农林街散户', '馨怡小区', '交警大队宿舍', '农机局宿舍小区', '郑东小区', '福州北路交警宿舍小区', '公安消防小区', '农机局宿舍小区', '郑东军休所', '郑东供电宿舍小区', '公安消防5#北楼', '纳福上城小区', '东亚粮店小区', '金龙苑小区', '中央公园（北区）', '福州南路供电宿舍小区', '福州南路公路段宿舍小区', '中银广场小区', '中银广场小区（劳动局宿舍平房）', '影视小区', '新立街小区外贸', '新立街小区物资', '新立街小区民政局', '新立街小区', '新兴街小区'] },
+            { name: '云溪换热站', phone: '0532-8720-2306', communities: ['云溪花园小区', '胡家庄铁路小区', '华宇新村', '司法局宿舍', '教师三村小区', '新星小区', '新嘉园小区一期', '农林街小区云溪', '土地局宿舍', '郑家小庄', '华东设计院小区', '海洋水产宿舍', '农林街小区自来水', '豪迈滨河花园', '李小庄', '郑家小庄小区汽修厂', '八个单元小区', '郑家小庄商住', '利民小区', '检察院宿舍', '胶州市郑州东路179号（华泰A区）', '华泰家园B区', '东升苑', '馨佳苑小区', '电力设备厂宿舍小区', '御城花园', '靖州路小区', '引黄济清', '引黄济青小区', '孙家岭新区', '孙家岭小区', '家美领寓小区', '水泥厂宿舍', '胡家庄小区', '阳光雅居小区', '云溪花园小区', '枫情小镇小区', '地税宿舍', '胶州市滕州路1号（昌新花园）'] },
+            { name: '徐州路换热站', phone: '0532-8726-5093', communities: ['徐州路小区', '永福花园', '忠观悦府', '正北将军花园', '福华园小区', '南坦小区','海邦花园','徐州路小区交通局', '南坦商住小区', '南坦园', '南坦路小区', '徐州路小区建总', '徐州路小区交通（常州路交开发）', '常州路小区', '毛毡小区', '建总开发二区（寺门首建总）', '太平路小区', '金富小区', '广州花园小区', '中心医院宿舍', '阜安公寓', '寺门首小区', '交通开发（中心医院）', '瑞华园小区', '文渊阁小区', '石油机械宿舍', '老一中宿舍' ]},
+            { name: '福龙园换热站', phone: '0532-8726-1362', communities: ['福龙园小区', '方井人家', '杭州花园', '河头源12号、23号楼', '河头源小区', '河头源二层', '张应镇政府楼', '泸州路小区（泸州路8号）', '泸州路监理小区', '泸州路建总宿舍', '广州南路安装公司', '泸州路建委宿舍', '广州南路三里河别墅', '杭州路鸿泰小区', '皇庭苑小区', '教师一村', '广州南路新源小区', '杜村政府宿舍', '胜利花园', '福华园小区二区', '盛世家园小区', '盛世家园干休所', '状元阁小区', '山水嘉园小区'] },
+            { name: '富贵换热站', phone: '0532-8720-1022', communities: ['舜邦富贵花园',  '双坦小区', '水寨花园', '水寨七公司', '正北蔚蓝半岛', '南区学校改造楼', '云溪新村', '水寨花园', '毛毡小区', '袁家巷小区',  '比华丽小区二期'] },
+            { name: '千禧园换热站', phone: '0532-8223-9003', communities: [ '镂邸苑小区', '东方花园', '龙州小区', '滨河苑', '千禧苑小区', '百强新世家', '惠苑小区', '千禧苑公寓', '盛世嘉赫园', '涝洼新村/涝洼花园', '皮防宿舍1# 皮防宿舍2#', '冠华小区一区', '市南小区', '三医宿舍'] },
+            { name: '常乐换热站', phone: '0532-8726-3210', communities: ['融城嘉汇苑', '常乐花园', '新源上城明珠', '胶州市杭州路17号（常青藤）', '胶州市青州西路32号（锦绣御园）', '市政宿舍', '高州路铁路小区', '高州路小区', '胶州西路自来水宿舍', '云龙花园', ' 二里河小区', '福乐家园', '公路段胶州西路二里河宿舍', '融城响嘡', '集美常青'] },
+            { name: '富新换热站', phone: '0532-8721-2293', communities: ['富新花园', '郭家庄小区', '华云新村', '顺德花园', '方井园小区', '福寿小区','杭州路地税局宿舍', '郑州西路小区',  '西湖小区', '老酒厂小区', '君惠兰庭小区', '科润城格外小区', '市中小区', '中云办事处宿舍', '响嘡花园', '印刷厂宿舍', '听溪园小区'] },
+            { name: '惠锦苑换热站', phone: '0532-8720-5393', communities: ['融城嘉兴苑', '惠锦苑', '惠锦小区','大王家庄', '阜北小区', '向阳乐园', '阜北党校楼', '城信楼', '白水泉', '传输局宿舍', '粮食批发市场', '胶良小区', '新嘉园小区二期（2-3#）', '良友花园', '军供站宿舍', '广北邮政宿舍', '富吉商住', '融城嘉杰苑', '融城嘉和苑', '富吉小区', '康都绿苑小区', '惠州路小区', '市联社宿舍', '135医院宿舍', '土产公司宿舍', '华云乐园',  '广惠小区', '金山小区', '康桥丽苑', '广惠商住小区'] },
+            { name: '比华丽换热站', phone: '0532-8720-2305', communities: ['比华丽小区', '科润城上河', '东苑府邸', '东关小区', '钱市街小区','市政府新旧楼', '太平路小区财政宿舍', '鑫古城', '钱市街', '财富公寓', '百货大楼小区', '进德街小区', '苏州路供电小区',  '世纪花园小区', '水利局宿舍', '向阳苑小区', '公安局宿舍', '建总开发一区（1-3）', '交通开发', '金龙开发', '市委宿舍', '市委平房', '开发区开发', '卫生局宿舍', '武装部宿舍'] }
+        ];
+
+        const communityMap = {};
+        stationData.forEach(station => {
+            station.communities.forEach(comm => {
+                communityMap[comm] = {
+                    station: station.name,
+                    phone: station.phone
+                };
+            });
+        });
+        const allCommunities = Object.keys(communityMap).sort((a,b) => a.localeCompare(b, 'zh'));
+
+        const searchInput = document.getElementById('searchInput');
+        const suggestionsDiv = document.getElementById('suggestions');
+        const resultCard = document.getElementById('resultCard');
+        const emptyHint = document.getElementById('emptyHint');
+
+        let currentFocus = -1;
+
+        function handleInput() {
+            const query = searchInput.value.trim();
+            const suggestions = [];
+            if (query) {
+                const lowerQuery = query.toLowerCase();
+                allCommunities.forEach(comm => {
+                    if (comm.toLowerCase().includes(lowerQuery)) {
+                        suggestions.push(comm);
+                    }
+                });
+            }
+
+            if (suggestions.length > 0 && query) {
+                renderSuggestions(suggestions);
+                suggestionsDiv.classList.add('show');
+            } else {
+                suggestionsDiv.classList.remove('show');
+                if (!query) {
+                    resultCard.classList.remove('show');
+                    emptyHint.style.display = 'block';
+                }
+            }
+            currentFocus = -1;
+        }
+
+        function renderSuggestions(list) {
+            let html = '';
+            list.forEach((comm, index) => {
+                html += `<div class="suggestion-item" data-community="${comm}" 
+                         onmousedown="selectCommunity('${comm}')" 
+                         onmouseover="setActive(${index})">${comm}</div>`;
+            });
+            suggestionsDiv.innerHTML = html;
+        }
+
+        function selectCommunity(community) {
+            searchInput.value = community;
+            suggestionsDiv.classList.remove('show');
+            showResult(community);
+        }
+
+        searchInput.addEventListener('keydown', function(e) {
+            const items = suggestionsDiv.querySelectorAll('.suggestion-item');
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                if (items.length > 0) {
+                    currentFocus = Math.min(currentFocus + 1, items.length - 1);
+                    setActive(currentFocus);
+                }
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                if (items.length > 0) {
+                    currentFocus = Math.max(currentFocus - 1, 0);
+                    setActive(currentFocus);
+                }
+            } else if (e.key === 'Enter') {
+                if (currentFocus >= 0 && items.length > 0) {
+                    e.preventDefault();
+                    const selected = items[currentFocus].dataset.community;
+                    if (selected) selectCommunity(selected);
+                } else {
+                    const inputVal = searchInput.value.trim();
+                    if (inputVal && communityMap[inputVal]) {
+                        selectCommunity(inputVal);
+                    } else {
+                        const match = allCommunities.find(c => c.includes(inputVal));
+                        if (match) selectCommunity(match);
+                    }
+                }
+            }
+        });
+
+        function setActive(index) {
+            const items = suggestionsDiv.querySelectorAll('.suggestion-item');
+            items.forEach(item => item.classList.remove('active'));
+            if (items[index]) {
+                items[index].classList.add('active');
+                items[index].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        function hideSuggestionsDelay() {
+            setTimeout(() => {
+                if (document.activeElement !== searchInput) {
+                    suggestionsDiv.classList.remove('show');
+                }
+            }, 150);
+        }
+
+        function showResult(community) {
+            const info = communityMap[community];
+            if (!info) {
+                resultCard.classList.remove('show');
+                emptyHint.style.display = 'block';
+                return;
+            }
+            document.getElementById('resultStation').textContent = info.station;
+            document.getElementById('resultCommunity').textContent = '服务小区：' + community;
+            document.getElementById('resultPhone').textContent = info.phone;
+            document.getElementById('resultPhoneLink').href = 'tel:' + info.phone.replace(/-/g, '');
+            resultCard.classList.add('show');
+            emptyHint.style.display = 'none';
+        }
+
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-area')) {
+                suggestionsDiv.classList.remove('show');
+            }
+        });
+
+        window.onload = function() {
+            resultCard.classList.remove('show');
+            emptyHint.style.display = 'block';
+        };
+    </script>
+</body>
+</html>
